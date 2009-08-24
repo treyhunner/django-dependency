@@ -8,7 +8,7 @@ setup(name='django-dependency',
       author='Caktus Consulting Group, LLC',
       author_email='solutions@caktusgroup.com',
       url='http://code.google.com/p/django-dependency/',
-      packages=['deps'],
+      packages=['deps', 'deps.management', 'deps.management.commands'],
       scripts=['scripts/create_deps.py']
 )
 
