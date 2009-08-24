@@ -39,7 +39,7 @@ class VersionControl(object):
         return "<VersionControl: %s>" % self.app_name
     
     def add_to_python_path(self):
-        if not os.path.exists(self.python_path):
+        if not os.path.exists(self.path):
             raise MissingDependency('%s does not exist.  Run "./manage.py up" to retrieve this dependency' % self.app_name)
         sys.path.insert(0, self.python_path)
 
@@ -51,7 +51,7 @@ class HG(VersionControl):
     
     def up(self):
         logger.info('%s' % self)
-        if not os.path.exists(self.python_path):
+        if not os.path.exists(self.path):
             self.checkout()
         os.chdir(self.python_path)
         os.system('hg update')
@@ -67,3 +67,14 @@ class SVN(VersionControl):
         if not os.path.exists(self.path):
             self.checkout()
         os.system('svn up %s' % self.path)
+
+def add_all_to_path(settings, auto_update=False):
+    for dependency in settings.DEPENDENCIES:
+        try:
+            dependency.add_to_python_path()
+        except MissingDependency:
+            if auto_update:
+                dependency.up()
+            else:
+                raise
+            dependency.add_to_python_path()
