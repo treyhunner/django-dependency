@@ -54,7 +54,7 @@ class HG(VersionControl):
         if not os.path.exists(self.path):
             self.checkout()
         os.chdir(self.python_path)
-        os.system('hg update')
+        os.system('hg pull --update')
 
 
 class SVN(VersionControl):
@@ -67,6 +67,7 @@ class SVN(VersionControl):
         if not os.path.exists(self.path):
             self.checkout()
         os.system('svn up %s' % self.path)
+
 
 def add_all_to_path(settings, auto_update=False, position=1):
     for dependency in settings.DEPENDENCIES:
