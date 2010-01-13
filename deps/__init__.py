@@ -15,16 +15,12 @@ class MissingDependency(Exception):
 
 
 class VersionControl(object):
-    def __init__(self, url, root, app_name='', project_name=''):
+    def __init__(self, url, root, app_name=None, project_name=None):
         self.url = url
         self.root = root
         tail = os.path.basename((urlparse.urlparse(url)[2]).rstrip('/'))
-        if not app_name:
-            self.app_name = tail
-            self.project_name = tail
-        else:
-            self.app_name = app_name
-            self.project_name = tail
+        self.project_name = project_name and project_name or tail
+        self.app_name = app_name and app_name or tail
         self.python_path = os.path.join(
             self.root,
             self.project_name,
@@ -55,6 +51,19 @@ class HG(VersionControl):
             self.checkout()
         os.chdir(self.python_path)
         os.system('hg pull --update')
+
+
+class GIT(VersionControl):
+    def checkout(self):
+        logger.info('checking out %s' % self.project_name)
+        os.system('git clone %s %s' % (self.url, self.python_path))
+
+    def up(self):
+        logger.info('%s' % self)
+        if not os.path.exists(self.path):
+            self.checkout()
+        os.chdir(self.python_path)
+        os.system('git pull')
 
 
 class SVN(VersionControl):
