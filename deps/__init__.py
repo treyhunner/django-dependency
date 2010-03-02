@@ -15,9 +15,10 @@ class MissingDependency(Exception):
 
 
 class VersionControl(object):
-    def __init__(self, url, root, app_name=None, project_name=None):
+    def __init__(self, url, root, app_name=None, project_name=None, rev=''):
         self.url = url
         self.root = root
+        self.rev = rev
         tail = os.path.basename((urlparse.urlparse(url)[2]).rstrip('/'))
         self.project_name = project_name and project_name or tail
         self.app_name = app_name and app_name or tail
@@ -41,16 +42,21 @@ class VersionControl(object):
 
 
 class HG(VersionControl):
+    def __init__(self, *args, **kwargs):
+        super(HG, self).__init__(*args, **kwargs)
+        if self.rev is not '':
+            self.rev = '-r%s' % self.rev
+        
     def checkout(self):
         logger.info('checking out %s' % self.project_name)
-        os.system('hg clone %s %s' % (self.url, self.python_path))
-    
+        os.system('hg clone %s %s %s' % (self.rev, self.url, self.python_path))
+
     def up(self):
         logger.info('%s' % self)
         if not os.path.exists(self.path):
             self.checkout()
         os.chdir(self.python_path)
-        os.system('hg pull --update')
+        os.system('hg pull %s --update' % self.rev)
 
 
 class GIT(VersionControl):
@@ -64,19 +70,24 @@ class GIT(VersionControl):
             self.checkout()
         os.chdir(self.python_path)
         os.system('git pull')
-
+        if self.rev is not '':
+            os.system('git checkout %s' % self.rev)
 
 class SVN(VersionControl):
+    def __init__(self, *args, **kwargs):
+        super(SVN, self).__init__(*args, **kwargs)
+        if self.rev is not '':
+            self.rev = '-r %s' % self.rev
+            
     def checkout(self):
         logger.info('checking out %s' % self.project_name)
-        os.system('svn co %s %s' % (self.url, self.path))
-    
+        os.system('svn %s co %s %s' % (self.rev,self.url, self.path))
+        
     def up(self):
         logger.info('%s' % self)
         if not os.path.exists(self.path):
             self.checkout()
-        os.system('svn up %s' % self.path)
-
+        os.system('svn %s up %s' % (self.rev,self.path))
 
 def add_all_to_path(settings, auto_update=False, position=1):
     for dependency in settings.DEPENDENCIES:
