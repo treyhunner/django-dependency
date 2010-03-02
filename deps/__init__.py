@@ -44,7 +44,7 @@ class VersionControl(object):
 class HG(VersionControl):
     def __init__(self, *args, **kwargs):
         super(HG, self).__init__(*args, **kwargs)
-        if self.rev is not '':
+        if self.rev:
             self.rev = '-r%s' % self.rev
         
     def checkout(self):
@@ -70,24 +70,24 @@ class GIT(VersionControl):
             self.checkout()
         os.chdir(self.python_path)
         os.system('git pull')
-        if self.rev is not '':
+        if self.rev:
             os.system('git checkout %s' % self.rev)
 
 class SVN(VersionControl):
     def __init__(self, *args, **kwargs):
         super(SVN, self).__init__(*args, **kwargs)
-        if self.rev is not '':
-            self.rev = '-r %s' % self.rev
+        if self.rev:
+            self.rev = '-r%s' % self.rev
             
     def checkout(self):
         logger.info('checking out %s' % self.project_name)
-        os.system('svn %s co %s %s' % (self.rev,self.url, self.path))
+        os.system('svn %s co %s %s' % (self.rev, self.url, self.path))
         
     def up(self):
         logger.info('%s' % self)
         if not os.path.exists(self.path):
             self.checkout()
-        os.system('svn %s up %s' % (self.rev,self.path))
+        os.system('svn %s up %s' % (self.rev, self.path))
 
 def add_all_to_path(settings, auto_update=False, position=1):
     for dependency in settings.DEPENDENCIES:
