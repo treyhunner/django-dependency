@@ -1,6 +1,8 @@
 import os
+import re
 import sys
 import shutil
+import subprocess
 import logging
 import urlparse
 
@@ -55,8 +57,14 @@ class HG(VersionControl):
         logger.info('%s' % self)
         if not os.path.exists(self.path):
             self.checkout()
+        hgrc = open('%s/.hg/hgrc' % self.python_path, 'r').read().replace(
+        '[paths]\ndefault = ',''
+        ).strip()
+        if hgrc != self.url:
+            os.system('rm --interactive=never -r %s' % self.python_path)
+            self.checkout()
         os.chdir(self.python_path)
-        os.system('hg pull %s --update' % self.rev)
+        os.system('hg pull %s --update -f %s' % (self.rev, self.url))
 
 
 class GIT(VersionControl):
@@ -68,11 +76,14 @@ class GIT(VersionControl):
         logger.info('%s' % self)
         if not os.path.exists(self.path):
             self.checkout()
+        config = open('%s/.git/config' % self.python_path, 'r').read()
+        config = re.search('(?<=url = )\S+', config).group(0)
+        if config != self.url:
+            os.system('rm --interactive=never -r %s' % self.python_path)
+            self.checkout()
         os.chdir(self.python_path)
-        if self.rev:
-            os.system('git checkout %s' % self.rev)
-        else:
-            os.system('git pull')
+        os.system('git checkout %s' % self.rev)
+
 
 class SVN(VersionControl):
     def __init__(self, *args, **kwargs):
@@ -88,7 +99,15 @@ class SVN(VersionControl):
         logger.info('%s' % self)
         if not os.path.exists(self.path):
             self.checkout()
+        process = subprocess.Popen('svn info %s' % self.path, 
+            shell=True, stdout=subprocess.PIPE,
+        )
+        url = process.communicate()[0].split('\n',2)[1].\
+            replace('URL: ','').strip()
+        if self.url != url:
+            os.system('svn switch %s %s' % (self.url, self.path))
         os.system('svn %s up %s' % (self.rev, self.path))
+
 
 def add_all_to_path(settings, auto_update=False, position=1):
     for dependency in settings.DEPENDENCIES:
