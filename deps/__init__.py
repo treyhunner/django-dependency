@@ -69,9 +69,10 @@ class GIT(VersionControl):
         if not os.path.exists(self.path):
             self.checkout()
         os.chdir(self.python_path)
-        os.system('git pull')
         if self.rev:
             os.system('git checkout %s' % self.rev)
+        else:
+            os.system('git pull')
 
 class SVN(VersionControl):
     def __init__(self, *args, **kwargs):
