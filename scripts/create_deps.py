@@ -37,10 +37,18 @@ DEPENDENCIES = (
     for name, url, dir in externals:
         if name != url.rstrip('/')[-len(name):]:
             raise Exception('Changing the name of an app is not (yet) supported.')
-        print """    deps.SVN(
+        url = url.split(' ', 1)
+        if len(url) == 2:
+            print """    deps.SVN(
+        '%s',
+        rev='%s',
+        root=DEPDENDENCY_ROOT,
+    ),""" % (url[1], url[0].replace('-r',''))
+        else:
+            print """    deps.SVN(
         '%s',
         root=DEPDENDENCY_ROOT,
-    ),""" % url
+    ),""" % url[0]
     print """)
 """
 
