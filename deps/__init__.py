@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import logging
 import urlparse
-
+import ConfigParser
 
 logger = logging.getLogger('deps')
 logger.setLevel(logging.DEBUG)
@@ -57,9 +57,9 @@ class HG(VersionControl):
         logger.info('%s' % self)
         if not os.path.exists(self.path):
             self.checkout()
-        hgrc = open('%s/.hg/hgrc' % self.python_path, 'r').read().replace(
-        '[paths]\ndefault = ',''
-        ).strip()
+        config = ConfigParser.ConfigParser()
+        config.read('%s/.hg/hgrc' % self.python_path)
+        hgrc = config.get("paths","default")
         if hgrc != self.url:
             os.system('rm --interactive=never -r %s' % self.python_path)
             self.checkout()
