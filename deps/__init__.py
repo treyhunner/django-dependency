@@ -49,7 +49,6 @@ class VersionControl(object):
             )
             
         if not os.path.exists(path):
-            print path
             raise MissingDependency('%s does not exist.  Run "./manage.py up" to retrieve this dependency' % self.app_name)
         sys.path.insert(position, self.python_path)
 
