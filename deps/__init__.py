@@ -17,7 +17,7 @@ class MissingDependency(Exception):
 
 
 class VersionControl(object):
-    def __init__(self, url, root, app_name=None, project_name=None, rev=''):
+    def __init__(self, url, root, app_name=None, project_name=None, rev='', run_path=None):
         self.url = url
         self.root = root
         self.rev = rev
@@ -28,6 +28,8 @@ class VersionControl(object):
             self.root,
             self.project_name,
         )
+        self.run_path=run_path
+            
         self.path = os.path.join(
             self.root,
             self.project_name,
@@ -38,7 +40,16 @@ class VersionControl(object):
         return "<VersionControl: %s>" % self.app_name
     
     def add_to_python_path(self, position):
-        if not os.path.exists(self.path):
+        path=self.path
+        if self.run_path:
+            path = os.path.join(
+                self.root,
+                self.project_name,
+                self.run_path,
+            )
+            
+        if not os.path.exists(path):
+            print path
             raise MissingDependency('%s does not exist.  Run "./manage.py up" to retrieve this dependency' % self.app_name)
         sys.path.insert(position, self.python_path)
 
