@@ -97,8 +97,8 @@ class GIT(VersionControl):
             os.system('rm --interactive=never -r %s' % self.python_path)
             self.checkout()
         os.chdir(self.python_path)
-        os.system('git pull -q %s' % self.url)
         os.system('git checkout %s' % self.rev)
+        os.system('git pull -q %s %s' % (self.url, self.rev))
 
 
 class SVN(VersionControl):
