@@ -2,10 +2,10 @@ import os
 import re
 import sys
 import shutil
-import subprocess
 import logging
 import urlparse
 import ConfigParser
+from subprocess import Popen, PIPE, call
 
 logger = logging.getLogger('deps')
 logger.setLevel(logging.DEBUG)
@@ -66,7 +66,7 @@ class HG(VersionControl):
         
     def checkout(self):
         logger.info('checking out %s' % self.project_name)
-        os.system('hg clone %s %s %s' % (self.rev, self.url, self.python_path))
+        call('hg clone %s %s %s' % (self.rev, self.url, self.python_path), shell=True)
 
     def up(self):
         logger.info('%s' % self)
@@ -76,16 +76,16 @@ class HG(VersionControl):
         config.read('%s/.hg/hgrc' % self.python_path)
         hgrc = config.get("paths","default")
         if hgrc != self.url:
-            os.system('rm --interactive=never -r %s' % self.python_path)
+            call('rm --interactive=never -r %s' % self.python_path, shell=True)
             self.checkout()
         os.chdir(self.python_path)
-        os.system('hg pull %s --update -f %s' % (self.rev, self.url))
+        call('hg pull %s --update -f %s' % (self.rev, self.url), shell=True)
 
 
 class GIT(VersionControl):
     def checkout(self):
         logger.info('checking out %s' % self.project_name)
-        os.system('git clone %s %s' % (self.url, self.python_path))
+        call('git clone %s %s' % (self.url, self.python_path), shell=True)
 
     def up(self):
         logger.info('%s' % self)
@@ -94,11 +94,11 @@ class GIT(VersionControl):
         config = open('%s/.git/config' % self.python_path, 'r').read()
         config = re.search('(?<=url = )\S+', config).group(0)
         if config != self.url:
-            os.system('rm --interactive=never -r %s' % self.python_path)
+            call('rm --interactive=never -r %s' % self.python_path, shell=True)
             self.checkout()
         os.chdir(self.python_path)
-        os.system('git checkout %s' % self.rev)
-        os.system('git pull -q %s %s' % (self.url, self.rev))
+        call('git checkout %s' % self.rev, shell=True)
+        call('git pull -q %s %s' % (self.url, self.rev), shell=True)
 
 
 class SVN(VersionControl):
@@ -109,20 +109,20 @@ class SVN(VersionControl):
             
     def checkout(self):
         logger.info('checking out %s' % self.project_name)
-        os.system('svn %s co %s %s' % (self.rev, self.url, self.path))
+        call('svn %s co %s %s' % (self.rev, self.url, self.path), shell=True)
         
     def up(self):
         logger.info('%s' % self)
         if not os.path.exists(self.path):
             self.checkout()
-        process = subprocess.Popen('svn info %s' % self.path, 
-            shell=True, stdout=subprocess.PIPE,
+        process = Popen('svn info %s' % self.path, 
+            shell=True, stdout=PIPE,
         )
         url = process.communicate()[0].split('\n',2)[1].\
             replace('URL: ','').strip()
         if self.url != url:
-            os.system('svn switch %s %s' % (self.url, self.path))
-        os.system('svn %s up %s' % (self.rev, self.path))
+            call('svn switch %s %s' % (self.url, self.path), shell=True)
+        call('svn %s up %s' % (self.rev, self.path), shell=True)
 
 
 def add_all_to_path(settings, auto_update=False, position=1):
