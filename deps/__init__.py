@@ -97,9 +97,14 @@ class GIT(VersionControl):
             call('rm --interactive=never -r %s' % self.python_path, shell=True)
             self.checkout()
         os.chdir(self.python_path)
-        call('git checkout %s' % self.rev, shell=True)
-        call('git pull -q %s %s' % (self.url, self.rev), shell=True)
-
+        if call('git show-ref --verify --quiet refs/heads/%s' % self.rev, shell=True):
+        # rev is not a branch
+            call('git fetch %s' % self.url, shell=True)
+            call('git checkout %s' % self.rev, shell=True)
+        else:
+        # rev is a branch
+            call('git checkout %s' % self.rev, shell=True)
+            call('git pull -q %s %s' % (self.url, self.rev), shell=True)
 
 class SVN(VersionControl):
     def __init__(self, *args, **kwargs):
